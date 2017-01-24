@@ -75,6 +75,18 @@ class WebserverAuthMiddleware implements HttpKernelInterface {
      *
      * We only need this code if Drupal page_cache module is enabled.
      */
+    $authname = $this->helper->getRemoteUser($request);
+    if (!$authname) {
+      // Depends on settings we'll allow/block access to the site
+      // for anonymous users at all.
+      $config = \Drupal::config('webserver_auth.settings');
+
+      if ($config->get('block_access_to_the_site')) {
+        // Do early exit.
+        exit(t('Access Denied'));
+        // @todo add redirect if set.
+      }
+    }
 
     // Checking if page_cache module installed.
     if ($this->module_handler->moduleExists('page_cache')) {
@@ -84,7 +96,7 @@ class WebserverAuthMiddleware implements HttpKernelInterface {
 
         // Getting authname. We don't need to validate it here, that will be done later
         // by authentication function.
-        if ($this->helper->getRemoteUser($request)) {
+        if ($authname) {
 
           // Checking that current session is not stored in cookies yet.
           $request_options = $this->sessionConfiguration->getOptions($request);
