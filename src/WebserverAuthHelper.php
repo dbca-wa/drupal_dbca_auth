@@ -36,6 +36,8 @@ class WebserverAuthHelper {
    */
   public function getRemoteUser(Request $request) {
     $authname = '';
+
+    // Checking if authname is located in one of server vars.
     if ($request->server->get('REDIRECT_REMOTE_USER')) {
       $authname = $request->server->get('REDIRECT_REMOTE_USER');
     }
@@ -44,6 +46,20 @@ class WebserverAuthHelper {
     }
     elseif ($request->server->get('PHP_AUTH_USER')) {
       $authname = $request->server->get('PHP_AUTH_USER');
+    }
+
+    $config = \Drupal::config('webserver_auth.settings');
+
+    // Stripping NTLM-style prefixes.
+    if ($config->get('strip_prefix')) {
+      $fields = explode("\\", $authname);
+      $authname = end($fields);
+    }
+
+    // Strippting domain.
+    if ($config->get('strip_domain')) {
+      $fields = explode ('@', $authname);
+      $authname = $fields[0];
     }
 
     return $authname;
@@ -120,11 +136,12 @@ class WebserverAuthHelper {
     // to use empty password or same password for all users.
     $pass = user_password(12);
 
-    $user = User::create([
+    $data = [
       'name' => $authname,
       'pass' => $pass,
-    ]);
+    ];
 
+    $user = User::create($data);
     $user->activate();
     $user->save();
 

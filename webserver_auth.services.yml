@@ -14,12 +14,17 @@ services:
     tags:
       - { name: authentication_provider, provider_id: 'webserver_auth', priority: 1, global: TRUE }
 
-  # @todo add description
+  # checking that authname and doing different actions depending on that condition.
   webserver_auth.middleware:
     class: Drupal\webserver_auth\StackMiddleware\WebserverAuthMiddleware
     arguments: ['@session_configuration', '@webserver_auth_helper', '@module_handler']
 
-    # We need this to run before page_cache module middleware to be able to prevent.
+    # Giving our middleware most priority to do early exit if needed.
     tags:
-      - { name: http_middleware, priority: 201 }
+      - { name: http_middleware, priority: 10000 }
 
+  # Altering routes to prevent access to user login/logout/register pages.
+    example.route_subscriber:
+        class: Drupal\webserver_auth\Routing\WebserverAuthRouteSubscriber
+        tags:
+          - { name: event_subscriber }
