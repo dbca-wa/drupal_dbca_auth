@@ -17,14 +17,16 @@ services:
   # checking that authname and doing different actions depending on that condition.
   webserver_auth.middleware:
     class: Drupal\webserver_auth\StackMiddleware\WebserverAuthMiddleware
-    arguments: ['@session_configuration', '@webserver_auth_helper', '@module_handler']
+    arguments: ['@session_configuration', '@webserver_auth_helper', '@module_handler', '@page_cache_request_policy']
 
     # Giving our middleware most priority to do early exit if needed.
     tags:
       - { name: http_middleware, priority: 10000 }
 
-  # Altering routes to prevent access to user login/logout/register pages.
-    example.route_subscriber:
-        class: Drupal\webserver_auth\Routing\WebserverAuthRouteSubscriber
-        tags:
-          - { name: event_subscriber }
+  # Route subscriber to alter user-releated routes, like, login/logout/register/etc.
+  webserver_auth.route_subscriber:
+    class: Drupal\webserver_auth\Routing\WebserverAuthRouteSubscriber
+    tags:
+      - { name: event_subscriber }
+
+

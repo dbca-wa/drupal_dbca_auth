@@ -10,7 +10,6 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\UserSession;
 use Drupal\Core\Session\SessionConfigurationInterface;
 use Drupal\webserver_auth\WebserverAuthHelper;
-use Drupal\user\entity\User;
 
 
 /**
@@ -61,7 +60,9 @@ class WebserverAuth implements AuthenticationProviderInterface {
    * {@inheritdoc}
    */
   public function applies(Request $request) {
-    return $request->hasSession() && $this->sessionConfiguration->hasSession($request);
+    // If our module is enabled, we want this auth provider to
+    // be always preferable.
+    return TRUE;
   }
 
   /**
@@ -77,7 +78,9 @@ class WebserverAuth implements AuthenticationProviderInterface {
    * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
    *   The session.
    *
-   * @return \Drupal\Core\Session\AccountInterface|null
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *
+   * @return \Drupal\Core\Session\AccountInterface|null The UserSession object for the current user, or NULL if this is an
    *   The UserSession object for the current user, or NULL if this is an
    *   anonymous session.
    */
@@ -88,13 +91,16 @@ class WebserverAuth implements AuthenticationProviderInterface {
 
     // Loging user out if no authname provided, but drupal still keeps user logged in.
     if (!$authname && $session->get('webserver_auth')) {
-      $this->helper->logOutUser();
+
+      // We don't to keep user logged in anymore.
       $session->remove('webserver_auth');
+      return NULL;
     }
 
     // Logging out user if current user differs from new remote user.
     if ($authname && $session->get('webserver_auth') && $authname != $session->get('webserver_auth')) {
-      $this->helper->logOutUser();
+
+      // We seeing new authname came up, so we assuming previous user logged out.
       $session->remove('webserver_auth');
     }
 
@@ -117,13 +123,9 @@ class WebserverAuth implements AuthenticationProviderInterface {
 
     $values['roles'] = array_merge([AccountInterface::AUTHENTICATED_ROLE], $rids);
 
-    // It's not enough to just set user session in order to be fully logged in.
-    // We need to finalize log in process first.
+    // Setting out webserver variable.
     if (!$session->get('webserver_auth')) {
       $session->set('webserver_auth', $authname);
-      // Finalizing log-in process.
-      $user = User::load($uid);
-      $this->helper->logInUser($user);
     }
 
     $user_session = new UserSession($values);

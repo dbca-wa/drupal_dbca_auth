@@ -5,6 +5,7 @@ namespace Drupal\webserver_auth\Routing;
 use Drupal\Core\Routing\RouteSubscriberBase;
 use Symfony\Component\Routing\RouteCollection;
 
+
 /**
  * Alters user-related routes and prevents users from
  * accessing to user/password/register/login/logout pages or
@@ -16,15 +17,17 @@ class WebserverAuthRouteSubscriber extends RouteSubscriberBase {
    * {@inheritdoc}
    */
   public function alterRoutes(RouteCollection $collection) {
-    // Change path '/user/login' to '/login'.
+    // Setting our own controller for user pages.
     if ($route = $collection->get('user.login')) {
-      $route->setPath('/login');
+      $route->setDefault('_controller', '\Drupal\webserver_auth\Controller\WebserverAuthUserControllers::userLogin');
     }
-    // Always deny access to '/user/logout'.
-    // Note that the second parameter of setRequirement() is a string.
+
     if ($route = $collection->get('user.logout')) {
-      $route->setRequirement('_access', 'FALSE');
+      $route->setDefault('_controller', '\Drupal\webserver_auth\Controller\WebserverAuthUserControllers::userLogout');
+    }
+
+    if ($route = $collection->get('user.register')) {
+      $route->setDefault('_controller', '\Drupal\webserver_auth\Controller\WebserverAuthUserControllers::userRegister');
     }
   }
-
 }

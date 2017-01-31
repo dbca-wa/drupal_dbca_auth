@@ -8,6 +8,9 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Session\SessionConfigurationInterface;
 use Drupal\webserver_auth\WebserverAuthHelper;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\PageCache\RequestPolicyInterface;
+use Drupal\Core\PageCache\ChainRequestPolicyInterface;
+use Drupal\webserver_auth\PageCache\RequestPolicy\RemoteUserIsSet;
 
 
 /**
@@ -37,11 +40,18 @@ class WebserverAuthMiddleware implements HttpKernelInterface {
   protected $helper;
 
   /**
+   * A policy rule determining the cacheability of a request.
+   *
+   * @var \Drupal\Core\PageCache\RequestPolicyInterface
+   */
+  protected $requestPolicy;
+
+  /**
    * Module handler service.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected $module_handler;
+  protected $moduleHandler;
 
   /**
    * Constructs a WebserverAuthMiddleware object.
@@ -53,16 +63,20 @@ class WebserverAuthMiddleware implements HttpKernelInterface {
    *   The session configuration.
    *
    * @param \Drupal\webserver_auth\WebserverAuthHelper $helper
-   *   Helper class that brings some helper functionality related to webserver authentication.
+   *   Helper class that brings some functionality related to webserver authentication.
    *
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *  Module handler service.
+   *
+   * @param \Drupal\Core\PageCache\RequestPolicyInterface $request_policy
+   *   A policy rule determining the cacheability of a request.
    */
-  public function __construct(HttpKernelInterface $http_kernel, SessionConfigurationInterface $session_configuration, WebserverAuthHelper $helper, ModuleHandlerInterface $module_handler) {
+  public function __construct(HttpKernelInterface $http_kernel, SessionConfigurationInterface $session_configuration, WebserverAuthHelper $helper, ModuleHandlerInterface $module_handler, RequestPolicyInterface $request_policy) {
     $this->httpKernel = $http_kernel;
     $this->sessionConfiguration = $session_configuration;
     $this->helper = $helper;
-    $this->module_handler = $module_handler;
+    $this->moduleHandler = $module_handler;
+    $this->requestPolicy = $request_policy;
   }
 
   /**
@@ -97,26 +111,9 @@ class WebserverAuthMiddleware implements HttpKernelInterface {
       }
     }
 
-    // Checking if page_cache module installed.
-    if ($this->module_handler->moduleExists('page_cache')) {
-
-      // Doing this for MASTER_REQUEST only.
-      if ($type === self::MASTER_REQUEST && PHP_SAPI !== 'cli') {
-
-        // Getting authname. We don't need to validate it here, that will be done later
-        // by authentication function.
-        if ($authname) {
-
-          // Checking that current session is not stored in cookies yet.
-          $request_options = $this->sessionConfiguration->getOptions($request);
-
-          // If cookies aren't set already for current session - adding placeholder which will
-          // block page cache from being loaded.
-          if (!$request->cookies->has($request_options['name'])) {
-            $request->cookies->set($request_options['name'], 'cache_blocked');
-          }
-        }
-      }
+    // Adding our own cache policy to prevent page from being cached if needed.
+    if (isset($this->requestPolicy) && $this->requestPolicy instanceof ChainRequestPolicyInterface) {
+      $this->requestPolicy->addPolicy(new RemoteUserIsSet($this->helper));
     }
 
     return $this->httpKernel->handle($request, $type, $catch);

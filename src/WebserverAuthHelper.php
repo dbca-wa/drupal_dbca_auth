@@ -35,7 +35,7 @@ class WebserverAuthHelper {
    * @return string
    */
   public function getRemoteUser(Request $request) {
-    $authname = '';
+    $authname = NULL;
 
     // Checking if authname is located in one of server vars.
     if ($request->server->get('REDIRECT_REMOTE_USER')) {
@@ -83,7 +83,7 @@ class WebserverAuthHelper {
 
     // Creating new user.
     $config = \Drupal::config('webserver_auth.settings');
-    if ($config->get('create_user') && !$data) {
+    if ($authname && $config->get('create_user') && !$data) {
       $new_user = $this->createNewUser($authname);
       return $new_user->id();
     }
