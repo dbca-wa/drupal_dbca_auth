@@ -20,12 +20,6 @@ webserver_auth.settings:
     block_access_redirect_url:
       type: string
       label: 'URL redirect if access is blocked'
-    strip_prefix:
-      type: boolean
-      label: 'Strip prefix'
-    strip_domain:
-      type: boolean
-      label: 'Strip domain'
     login_url:
       type: string
       label: 'Login URL'

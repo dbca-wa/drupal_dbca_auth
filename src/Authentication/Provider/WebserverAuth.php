@@ -86,25 +86,28 @@ class WebserverAuth implements AuthenticationProviderInterface {
    */
   protected function getUserFromSession(SessionInterface $session, Request $request) {
     // Checking if we got remote user set.
-    $authname = $this->helper->getRemoteUser($request);
+    $authinfo = $this->helper->getRemoteUser($request);
 
 
-    // Loging user out if no authname provided, but drupal still keeps user logged in.
-    if (!$authname && $session->get('webserver_auth')) {
+    // Loging user out if no authinfo provided, but drupal still keeps user logged in.
+    if (!$authinfo['email'] && $session->get('webserver_auth')) {
 
       // We don't to keep user logged in anymore.
       $session->remove('webserver_auth');
       return NULL;
     }
 
-    // Logging out user if current user differs from new remote user.
-    if ($authname && $session->get('webserver_auth') && $authname != $session->get('webserver_auth')) {
+    // get the UID of the remote user
+    $uid = $this->helper->validateRemoteUser($authinfo);
 
-      // We seeing new authname came up, so we assuming previous user logged out.
+    // Logging out user if current user differs from new remote user.
+    if ($uid && $session->get('webserver_auth') && $uid != $session->get('webserver_auth')) {
+
+      // We seeing new authinfo came up, so we assuming previous user logged out.
       $session->remove('webserver_auth');
     }
 
-    if (!($uid = $this->helper->validateRemoteUser($authname))) {
+    if (!$uid) {
       return NULL;
     }
 
@@ -125,7 +128,7 @@ class WebserverAuth implements AuthenticationProviderInterface {
 
     // Setting out webserver variable.
     if (!$session->get('webserver_auth')) {
-      $session->set('webserver_auth', $authname);
+      $session->set('webserver_auth', $uid);
     }
 
     $user_session = new UserSession($values);

@@ -88,20 +88,6 @@ class WebserverAuthSettingsForm extends ConfigFormBase {
       '#description' => $this->t('Provide optional absolute URL where blocked users should be redirected to. URL should start with http:// or https://'),
     ];
 
-    $form['advanced']['strip_prefix'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Strip prefix'),
-      '#default_value' => $config->get('strip_prefix'),
-      '#description' => $this->t('Strip NTLM-style prefixes (e.g. \'foo1\foo2\') from the login name (\'foo1\foo2\bar\') to generate the username (\'bar\').'),
-    ];
-
-    $form['advanced']['strip_domain'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Strip domain'),
-      '#default_value' => $config->get('strip_domain'),
-      '#description' => $this->t('Strip a domain name (e.g. \'@EXAMPLE.COM\') from the login name (\'newuser@EXAMPLE.COM\') to generate the username (\'newuser\').'),
-    ];
-
     $form['advanced']['login_url'] = [
       '#type' => 'textfield',
       '#size' => 75,
@@ -165,8 +151,6 @@ class WebserverAuthSettingsForm extends ConfigFormBase {
       ->set('create_user', $values['create_user'])
       ->set('email_domain', $values['email_domain'])
       ->set('match_existing', $values['match_existing'])
-      ->set('strip_prefix', $values['strip_prefix'])
-      ->set('strip_domain', $values['strip_domain'])
       ->set('disallow_pw_change', $values['disallow_pw_change'])
       ->set('disallow_username_change', $values['disallow_username_change'])
       ->set('login_url', $values['login_url'])

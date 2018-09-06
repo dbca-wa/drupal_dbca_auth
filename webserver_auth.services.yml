@@ -14,7 +14,7 @@ services:
     tags:
       - { name: authentication_provider, provider_id: 'webserver_auth', priority: 1, global: TRUE }
 
-  # checking that authname and doing different actions depending on that condition.
+  # checking that authinfo and doing different actions depending on that condition.
   webserver_auth.middleware:
     class: Drupal\webserver_auth\StackMiddleware\WebserverAuthMiddleware
     arguments: ['@session_configuration', '@webserver_auth_helper', '@module_handler', '@page_cache_request_policy']

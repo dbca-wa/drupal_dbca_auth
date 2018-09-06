@@ -90,8 +90,8 @@ class WebserverAuthMiddleware implements HttpKernelInterface {
      *
      * We only need this code if Drupal page_cache module is enabled.
      */
-    $authname = $this->helper->getRemoteUser($request);
-    if (!$authname) {
+    $authinfo = $this->helper->getRemoteUser($request);
+    if (!$authinfo['email']) {
       // Depends on settings we'll allow/block access to the site
       // for anonymous users at all.
       $config = \Drupal::config('webserver_auth.settings');

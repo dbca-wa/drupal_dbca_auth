@@ -35,34 +35,22 @@ class WebserverAuthHelper {
    * @return string
    */
   public function getRemoteUser(Request $request) {
-    $authname = NULL;
+    $authinfo = [
+      'email' => NULL,
+      'name' => NULL,
+    ];
 
-    // Checking if authname is located in one of server vars.
-    if ($request->server->get('REDIRECT_REMOTE_USER')) {
-      $authname = $request->server->get('REDIRECT_REMOTE_USER');
+    // Load values from server vars.
+    if ($request->server->get('X_EMAIL')) {
+      $authinfo['email'] = $request->server->get('X_EMAIL');
     }
-    elseif ($request->server->get('REMOTE_USER')) {
-      $authname = $request->server->get('REMOTE_USER');
-    }
-    elseif ($request->server->get('PHP_AUTH_USER')) {
-      $authname = $request->server->get('PHP_AUTH_USER');
-    }
-
-    $config = \Drupal::config('webserver_auth.settings');
-
-    // Stripping NTLM-style prefixes.
-    if ($config->get('strip_prefix')) {
-      $fields = explode("\\", $authname);
-      $authname = end($fields);
+    if ($request->server->get('X_FULL_NAME')) {
+      $authinfo['name'] = $request->server->get('X_FULL_NAME');
     }
 
-    // Strippting domain.
-    if ($config->get('strip_domain')) {
-      $fields = explode ('@', $authname);
-      $authname = $fields[0];
-    }
+    //$config = \Drupal::config('webserver_auth.settings');
 
-    return $authname;
+    return $authinfo;
   }
 
   /**
@@ -73,24 +61,24 @@ class WebserverAuthHelper {
    *
    * @return integer
    */
-  public function validateRemoteUser($authname) {
+  public function validateRemoteUser($authinfo) {
     // Checking if user exists and not blocked.
     $query = $this->connection->select('users_field_data', 'u');
     $query->fields('u', array('uid', 'status'));
-    $query->condition('u.name', $authname, '=');
+    $query->condition('u.mail', $authinfo['mail'], '=');
     $result = $query->execute();
     $data = $result->fetchAssoc();
 
     // Creating new user.
     $config = \Drupal::config('webserver_auth.settings');
-    if ($authname && $config->get('create_user') && !$data) {
-      $new_user = $this->createNewUser($authname);
+    if ($authinfo['mail'] && $config->get('create_user') && !$data) {
+      $new_user = $this->createNewUser($authinfo);
       return $new_user->id();
     }
 
     // Letting user know that his account was blocked.
     if ($data && !$data['status']) {
-      drupal_set_message(t('You account was blocked.'), 'error');
+      drupal_set_message(t('Sorry, there was a problem verifying your account.'), 'error');
     }
 
     if ($data['status']) {
@@ -127,17 +115,18 @@ class WebserverAuthHelper {
   }
 
   /**
-   * @param $authname
+   * @param $authinfo
    *
    * @return \Drupal\user\Entity\User $used
    */
-  public function createNewUser($authname) {
+  public function createNewUser($authinfo) {
     // Generating password. It won't be used, but we still don't want
     // to use empty password or same password for all users.
     $pass = user_password(12);
 
     $data = [
-      'name' => $authname,
+      'name' => $authinfo['name'],
+      'mail' => $authinfo['email'],
       'pass' => $pass,
     ];
 
