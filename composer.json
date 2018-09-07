@@ -1,5 +1,5 @@
 {
-    "name": "dbca-wa/drupal_dbca_auth",
+    "name": "dbca-wa/webserver_auth",
     "description": "DBCA SSO adapter for Drupal 8",
     "type": "drupal-module",
     "license": "GPL-2.0-or-later"
