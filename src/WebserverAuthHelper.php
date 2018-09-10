@@ -41,11 +41,11 @@ class WebserverAuthHelper {
     ];
 
     // Load values from server vars.
-    if ($request->server->get('X_EMAIL')) {
-      $authinfo['email'] = $request->server->get('X_EMAIL');
+    if ($request->server->get('HTTP_X_EMAIL')) {
+      $authinfo['email'] = $request->server->get('HTTP_X_EMAIL');
     }
-    if ($request->server->get('X_FULL_NAME')) {
-      $authinfo['name'] = $request->server->get('X_FULL_NAME');
+    if ($request->server->get('HTTP_X_FULL_NAME')) {
+      $authinfo['name'] = $request->server->get('HTTP_X_FULL_NAME');
     }
 
     //$config = \Drupal::config('webserver_auth.settings');
