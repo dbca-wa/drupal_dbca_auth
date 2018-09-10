@@ -65,13 +65,13 @@ class WebserverAuthHelper {
     // Checking if user exists and not blocked.
     $query = $this->connection->select('users_field_data', 'u');
     $query->fields('u', array('uid', 'status'));
-    $query->condition('u.mail', $authinfo['mail'], '=');
+    $query->condition('u.mail', $authinfo['email'], '=');
     $result = $query->execute();
     $data = $result->fetchAssoc();
 
     // Creating new user.
     $config = \Drupal::config('webserver_auth.settings');
-    if ($authinfo['mail'] && $config->get('create_user') && !$data) {
+    if ($authinfo['email'] && $config->get('create_user') && !$data) {
       $new_user = $this->createNewUser($authinfo);
       return $new_user->id();
     }
