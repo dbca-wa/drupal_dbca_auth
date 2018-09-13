@@ -5,6 +5,7 @@ namespace Drupal\webserver_auth;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Session\AnonymousUserSession;
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\user\Entity\User;
 
 class WebserverAuthHelper {
@@ -63,26 +64,26 @@ class WebserverAuthHelper {
    */
   public function validateRemoteUser($authinfo) {
     // Checking if user exists and not blocked.
-    $query = $this->connection->select('users_field_data', 'u');
-    $query->fields('u', array('uid', 'status'));
-    $query->condition('u.mail', $authinfo['email'], '=');
-    $result = $query->execute();
-    $data = $result->fetchAssoc();
+    $email_query = $this->connection->select('users_field_data', 'u');
+    $email_query->fields('u', array('uid', 'status'));
+    $email_query->condition('u.mail', $authinfo['email'], '=');
+    $email_result = $email_query->execute();
+    $email_data = $result->fetchAssoc();
 
     // Creating new user.
     $config = \Drupal::config('webserver_auth.settings');
-    if ($authinfo['email'] && $config->get('create_user') && !$data) {
+    if ($authinfo['email'] && $config->get('create_user') && !$email_data) {
       $new_user = $this->createNewUser($authinfo);
       return $new_user->id();
     }
 
     // Letting user know that his account was blocked.
-    if ($data && !$data['status']) {
+    if ($email_data && !$email_data['status']) {
       drupal_set_message(t('Sorry, there was a problem verifying your account.'), 'error');
     }
 
-    if ($data['status']) {
-      return $data['uid'];
+    if ($email_data['status']) {
+      return $email_data['uid'];
     }
 
     return NULL;
@@ -130,9 +131,21 @@ class WebserverAuthHelper {
       'pass' => $pass,
     ];
 
-    $user = User::create($data);
-    $user->activate();
-    $user->save();
+    try {
+        $user = User::create($data);
+        $user->activate();
+        $user->save();
+    } catch (Exception $ex) {
+        if ($ex instanceof EntityStorageException) {
+            // no collision between names allowed, add some noise
+            $data['name'] .= ' ' . user_password(6);
+            $user = User::create($data);
+            $user->activate();
+            $user->save();
+        } else {
+            throw $ex;
+        }
+    }
 
     return $user;
   }
