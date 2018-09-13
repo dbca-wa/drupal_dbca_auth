@@ -135,7 +135,7 @@ class WebserverAuthHelper {
         $user = User::create($data);
         $user->activate();
         $user->save();
-    } catch (Exception $ex) {
+    } catch (\Exception $ex) {
         if ($ex instanceof EntityStorageException) {
             // no collision between names allowed, add some noise
             $data['name'] .= ' ' . user_password(6);
