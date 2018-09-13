@@ -68,7 +68,7 @@ class WebserverAuthHelper {
     $email_query->fields('u', array('uid', 'status'));
     $email_query->condition('u.mail', $authinfo['email'], '=');
     $email_result = $email_query->execute();
-    $email_data = $result->fetchAssoc();
+    $email_data = $email_result->fetchAssoc();
 
     // Creating new user.
     $config = \Drupal::config('webserver_auth.settings');
