@@ -24,9 +24,9 @@ services:
       - { name: http_middleware, priority: 10000 }
 
   # Route subscriber to alter user-releated routes, like, login/logout/register/etc.
-  webserver_auth.route_subscriber:
-    class: Drupal\webserver_auth\Routing\WebserverAuthRouteSubscriber
-    tags:
-      - { name: event_subscriber }
+  #webserver_auth.route_subscriber:
+  #  class: Drupal\webserver_auth\Routing\WebserverAuthRouteSubscriber
+  #  tags:
+  #    - { name: event_subscriber }
 
 

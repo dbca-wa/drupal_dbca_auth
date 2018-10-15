@@ -88,7 +88,7 @@ class WebserverAuthSettingsForm extends ConfigFormBase {
       '#description' => $this->t('Provide optional absolute URL where blocked users should be redirected to. URL should start with http:// or https://'),
     ];
 
-    $form['advanced']['login_url'] = [
+/*    $form['advanced']['login_url'] = [
       '#type' => 'textfield',
       '#size' => 75,
       '#maxlength' => 1024,
@@ -114,7 +114,7 @@ class WebserverAuthSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('register_url'),
       '#description' => $this->t('Custom register URL. An empty URL disables the logout link on authenticated pages, any other value will be used as the logout URL.'),
     ];
-
+*/
     // @todo work on other options.
 
 //
@@ -153,9 +153,9 @@ class WebserverAuthSettingsForm extends ConfigFormBase {
       ->set('match_existing', $values['match_existing'])
       ->set('disallow_pw_change', $values['disallow_pw_change'])
       ->set('disallow_username_change', $values['disallow_username_change'])
-      ->set('login_url', $values['login_url'])
+/*      ->set('login_url', $values['login_url'])
       ->set('logout_url', $values['logout_url'])
-      ->set('register_url', $values['register_url'])
+      ->set('register_url', $values['register_url']) */
       ->set('account_modification', $values['account_modification'])
       ->set('add_all_new', $values['add_all_new'])
       ->set('skip_check', $values['skip_check'])
